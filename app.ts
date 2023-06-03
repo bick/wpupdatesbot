@@ -2,7 +2,6 @@ import Twit from "twit";
 import Parser from "rss-parser";
 
 // Initialize Twitter API client
-
 const T = new Twit({
   consumer_key: process.env.TWITTER_CONSUMER_KEY || "",
   consumer_secret: process.env.TWITTER_CONSUMER_SECRET || "",
@@ -36,24 +35,27 @@ async function checkFeeds() {
   for (const feed of feedList) {
     const feedData = await parser.parseURL(feed);
     for (const item of feedData.items) {
-      function isNew(item: { [key: string]: any } & Parser.Item): boolean {
-        // Check if 'pubDate' field is within the last hour
-        const oneHourAgo = Date.now() - 60 * 60 * 1000;
-
-        if (item.pubDate) {
-          const pubDate = new Date(item.pubDate).getTime();
-          return pubDate > oneHourAgo;
-        } else {
-          return false;
-        }
+      if (isNew(item)) {
+        tweet(item.title + " " + item.link);
       }
     }
   }
 }
 
-// Poll every 60 * 60 seconds (1 hour)
-setInterval(checkFeeds, 60 * 60 * 1000);
+function isNew(item: { [key: string]: any } & Parser.Item): boolean {
+  // Check if 'pubDate' field is within the last hour
+  const oneHourAgo = Date.now() - 60 * 60 * 1000;
 
-function isNew(item: { [key: string]: any } & Parser.Item) {
-  throw new Error("Function not implemented.");
+  if (item.pubDate) {
+    const pubDate = new Date(item.pubDate).getTime();
+    return pubDate > oneHourAgo;
+  } else {
+    return false;
+  }
+}
+
+// Serverless function
+export default async function (req, res) {
+  await checkFeeds();
+  res.status(200).send("Done");
 }
