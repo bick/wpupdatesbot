@@ -55,7 +55,13 @@ function isNew(item: { [key: string]: any } & Parser.Item): boolean {
 }
 
 // Serverless function
-export default async function (req, res) {
+export default async function (res: {
+  status: (arg0: number) => {
+    (): any;
+    new (): any;
+    send: { (arg0: string): void; new (): any };
+  };
+}) {
   await checkFeeds();
   res.status(200).send("Done");
 }
